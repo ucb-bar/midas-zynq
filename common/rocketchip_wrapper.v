@@ -91,13 +91,13 @@ module rocketchip_wrapper
   wire [4:0] raddr, waddr;
   reg  [4:0] raddr_r, waddr_r;
   reg [11:0] arid_r, awid_r;
-  reg [15:0] host_out_bits_r;
+  // reg [15:0] host_out_bits_r;
 
   wire host_in_fifo_full, host_in_fifo_empty, host_in_fifo_rden, host_in_fifo_wren;
   wire host_out_fifo_full, host_out_fifo_empty, host_out_fifo_wren, host_out_fifo_rden;
   wire [31:0] host_in_fifo_dout, host_out_fifo_dout;
   wire [5:0] host_out_fifo_count;
-  reg host_out_count, host_in_count;
+  // reg host_out_count, host_in_count;
 
   wire [31:0]S_AXI_addr;
   wire S_AXI_arready;
@@ -123,13 +123,15 @@ module rocketchip_wrapper
   wire mem_resp_val,mem_resp_rdy;
   wire [4:0] mem_req_tag, mem_resp_tag;
   wire [25:0] mem_req_addr;
-  wire [127:0] mem_req_data_bits;
-  reg [63:0] mem_resp_data_buf;
+  wire [63:0] mem_req_data_bits;
+  // wire [127:0] mem_req_data_bits;
+  // reg [63:0] mem_resp_data_buf;
 
   wire reset, reset_cpu;
 
   wire host_in_valid, host_in_ready, host_out_ready, host_out_valid;
-  wire [15:0] host_in_bits, host_out_bits;
+  // wire [15:0] host_in_bits, host_out_bits;
+  wire [31:0] host_in_bits, host_out_bits;
   wire host_clk;
   wire gclk_i, gclk_fbout, host_clk_i, mmcm_locked;
 
@@ -276,19 +278,23 @@ module rocketchip_wrapper
   );
 
   assign host_in_valid = !host_in_fifo_empty;
-  assign host_in_fifo_rden = host_in_count && host_in_valid && host_in_ready;
-  assign host_in_bits = !host_in_count ? host_in_fifo_dout[15:0] : host_in_fifo_dout[31:16];
+  assign host_in_fifo_rden = host_in_valid && host_in_ready;
+  // assign host_in_fifo_rden = host_in_count && host_in_valid && host_in_ready;
+  assign host_in_bits = host_in_fifo_dout;
+  // assign host_in_bits = !host_in_count ? host_in_fifo_dout[15:0] : host_in_fifo_dout[31:16];
 
   // host_out (from FPGA to ARM)
   
   assign host_out_ready = !host_out_fifo_full;
-  assign host_out_fifo_wren = (host_out_count == 1'b1);
+  // assign host_out_fifo_wren = (host_out_count == 1'b1);
+  assign host_out_fifo_wren = host_out_valid; // TODO: is it ok?
   assign host_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RFIFO_ADDR);
 
   fifo_32x32 host_out_fifo (
     .clk(host_clk),
     .reset(reset),
-    .din({host_out_bits, host_out_bits_r}),
+    // .din({host_out_bits, host_out_bits_r}),
+    .din(host_out_bits),
     .wren(host_out_fifo_wren),
     .rden(host_out_fifo_rden),
     .dout(host_out_fifo_dout),
@@ -315,9 +321,9 @@ module rocketchip_wrapper
 
     if (reset)
     begin
-      host_out_bits_r <= 16'd0;
-      host_out_count <= 1'd0;
-      host_in_count <= 1'd0;
+      // host_out_bits_r <= 16'd0;
+      // host_out_count <= 1'd0;
+      // host_in_count <= 1'd0;
       raddr_r <= 5'd0;
       waddr_r <= 5'd0;
       arid_r <= 12'd0;
@@ -327,6 +333,7 @@ module rocketchip_wrapper
     end
     else
     begin
+      /*
       if (host_out_valid)
       begin
         host_out_bits_r <= host_out_bits;
@@ -334,7 +341,7 @@ module rocketchip_wrapper
       end
       if (host_in_valid && host_in_ready)
         host_in_count <= host_in_count + 1;
-
+      */
 // state machine to handle reads from AXI master (ARM)
       case (st_rd)
         st_rd_idle : begin
@@ -397,27 +404,28 @@ module rocketchip_wrapper
 //  parameter st_WRITE_ACK = 3'b100;
 
   reg [1:0] state_r = st_IDLE; // for poweron global set/reset
-  reg [2:0] write_count = 3'd0;
-  reg read_count = 1'b0;
+  // reg [2:0] write_count = 3'd0;
+  // reg read_count = 1'b0;
 
   always @(posedge host_clk)
   begin
      if (reset)
      begin
         state_r <= st_IDLE;
-        write_count <= 3'd0;
-        read_count <= 1'b0;
-        mem_resp_data_buf <= 64'd0;
+        // write_count <= 3'd0;
+        // read_count <= 1'b0;
+        // mem_resp_data_buf <= 64'd0;
         S_AXI_rlast_r <= 1'b0;
      end
      else
         S_AXI_rlast_r <= S_AXI_rlast && S_AXI_rvalid;
+        /*
         if (S_AXI_rvalid)
         begin
            read_count <= read_count + 1;
            mem_resp_data_buf <= S_AXI_rdata;
         end
-
+        */
         case (state_r)
            st_IDLE : begin
               if (mem_req_cmd_val && !mem_req_cmd_rw)
@@ -436,8 +444,8 @@ module rocketchip_wrapper
            st_WRITE : begin
               if (S_AXI_wready && mem_req_data_val)
               begin
-                 write_count <= write_count + 1;
-                 if (write_count == 3'd7)
+                 // write_count <= write_count + 1;
+                 // if (write_count == 3'd7)
 //                    state_r <= st_WRITE_ACK;
                     state_r <= st_IDLE;
               end
@@ -456,14 +464,16 @@ module rocketchip_wrapper
   assign S_AXI_arvalid = (state_r == st_READ);
   assign mem_req_cmd_rdy = ((state_r == st_START_WRITE) && S_AXI_awready) || ((state_r == st_READ) && S_AXI_arready);
   assign S_AXI_wvalid = (state_r == st_WRITE) && mem_req_data_val;
-  assign S_AXI_wlast = (state_r == st_WRITE) && (write_count == 3'd7);
+  assign S_AXI_wlast = (state_r == st_WRITE); // && (write_count == 3'd7);
 
   assign S_AXI_rready = 1'b1;
-  assign mem_resp_val = read_count; // FIXME: assuming mem_resp_rdy is always 1 (i think its OK)
+  // assign mem_resp_val = read_count; // FIXME: assuming mem_resp_rdy is always 1 (i think its OK)
+  assign mem_resp_val = S_AXI_rvalid; 
 
-  assign mem_req_data_rdy = (state_r == st_WRITE) && write_count[0] && S_AXI_wready;
+  assign mem_req_data_rdy = (state_r == st_WRITE) /* && write_count[0] */ && S_AXI_wready;
   assign S_AXI_addr = {4'h1, mem_req_addr[21:0], 6'd0};
-  assign S_AXI_wdata = write_count[0] ? mem_req_data_bits[127:64] : mem_req_data_bits[63:0];
+  assign S_AXI_wdata = mem_req_data_bits;
+  // ssign S_AXI_wdata = write_count[0] ? mem_req_data_bits[127:64] : mem_req_data_bits[63:0];
   assign S_AXI_bready = 1'b1; //(state_r == st_WRITE_ACK);
   
 /*
@@ -483,7 +493,7 @@ module rocketchip_wrapper
   assign S_AXI_awid = 6'd0;
   assign mem_resp_tag = S_AXI_rid[4:0];
 
-  Top top(
+  DaisyShim top(
        .clk(host_clk),
        .reset(reset_cpu),
        //.io_host_clk(  )
@@ -505,7 +515,8 @@ module rocketchip_wrapper
        .io_mem_req_data_bits_data( mem_req_data_bits ),
        .io_mem_resp_ready( mem_resp_rdy ),
        .io_mem_resp_valid( mem_resp_val ),
-       .io_mem_resp_bits_data( {S_AXI_rdata, mem_resp_data_buf} ),
+       // .io_mem_resp_bits_data( {S_AXI_rdata, mem_resp_data_buf} ),
+       .io_mem_resp_bits_data( S_AXI_rdata ),
        .io_mem_resp_bits_tag( mem_resp_tag )
   );
 `ifndef differential_clock
