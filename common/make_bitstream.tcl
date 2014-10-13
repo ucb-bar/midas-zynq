@@ -1,4 +1,4 @@
-open_project BOARD_NAME_HERE_daisy/BOARD_NAME_HERE_daisy.xpr
+open_project BOARD_NAME_HERE_rocketchip/BOARD_NAME_HERE_rocketchip.xpr
 reset_run synth_1
 reset_run impl_1
 launch_runs synth_1

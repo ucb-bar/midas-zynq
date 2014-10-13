@@ -25,31 +25,31 @@ default: project
 src/verilog/rocketchip_wrapper.v: $(common)/rocketchip_wrapper.v
 	cp $(common)/rocketchip_wrapper.v src/verilog/
 
-src/tcl/$(BOARD)_daisy.tcl: $(common)/zynq_daisy.tcl Makefile
+src/tcl/$(BOARD)_rocketchip.tcl: $(common)/zynq_rocketchip.tcl Makefile
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/DESIGN_HERE/$(DESIGN)/g' \
-		$(common)/zynq_daisy.tcl > src/tcl/$(BOARD)_daisy.tcl
+		$(common)/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
 
 src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
 	sed 's/BOARD_NAME_HERE/$(BOARD)/g' \
 		$(common)/make_bitstream.tcl > src/tcl/make_bitstream.tcl
 
 src/verilog/$(DESIGN)Shim.v:
-	cd $(base_dir)/daisy; \
+	cd $(base_dir)/rocketchip; \
 	make $(DESIGN)Shim.v; \
 	cp generated/$(DESIGN)Shim.v $(base_dir)/$(BOARD)/src/verilog
-daisy: src/verilog/$(DESIGN)Shim.v	
+rocketchip: src/verilog/$(DESIGN)Shim.v	
 
 # Project generation
 # ------------------------------------------------------------------------------
-project = $(BOARD)_daisy/$(BOARD)_daisy.xpr
-$(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(BOARD)_daisy.tcl
-	vivado -mode tcl -source src/tcl/$(BOARD)_daisy.tcl;
+project = $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
+$(project): | src/verilog/rocketchip_wrapper.v src/verilog/$(DESIGN)Shim.v src/tcl/$(BOARD)_rocketchip.tcl
+	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl;
 project: $(project)
 
 vivado: $(project)
 	vivado $(project) &
 
-bitstream = $(BOARD)_daisy/$(BOARD)_daisy.runs/impl_1/daisy_wrapper.bit
+bitstream = $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
 $(bitstream): src/tcl/make_bitstream.tcl $(verilog_srcs) src/constrs/base.xdc | $(project)
 	vivado -mode tcl -source src/tcl/make_bitstream.tcl
 bitstream: $(bitstream)
@@ -162,10 +162,10 @@ fetch-riscv-linux-deliver:
 
 clean:
 	rm -f *.log *.jou *.str
-	rm -rf $(BOARD)_daisy
+	rm -rf $(BOARD)_rocketchip
 	rm -f src/verilog/$(DESIGN)Shim.v
 	rm -f src/verilog/rocketchip_wrapper.v
-	rm -f src/tcl/$(BOARD)_daisy.tcl
+	rm -f src/tcl/$(BOARD)_rocketchip.tcl
 	rm -f src/tcl/make_bitstream.tcl
 
-.PHONY: vivado daisy fetch-images load-sd ramdisk-open ramdisk-close clean
+.PHONY: vivado rocketchip fetch-images load-sd ramdisk-open ramdisk-close clean
