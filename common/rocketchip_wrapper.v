@@ -122,7 +122,8 @@ module rocketchip_wrapper
   wire mem_req_cmd_val, mem_req_cmd_rdy, mem_req_cmd_rw, mem_req_data_val, mem_req_data_rdy;
   wire mem_resp_val,mem_resp_rdy;
   wire [4:0] mem_req_tag, mem_resp_tag;
-  wire [25:0] mem_req_addr;
+  wire [31:0] mem_req_addr;
+  // wire [25:0] mem_req_addr;
   wire [63:0] mem_req_data_bits;
   // wire [127:0] mem_req_data_bits;
   // reg [63:0] mem_resp_data_buf;
@@ -471,7 +472,8 @@ module rocketchip_wrapper
   assign mem_resp_val = S_AXI_rvalid; 
 
   assign mem_req_data_rdy = (state_r == st_WRITE) /* && write_count[0] */ && S_AXI_wready;
-  assign S_AXI_addr = {4'h1, mem_req_addr[21:0], 6'd0};
+  assign S_AXI_addr = mem_req_addr;
+  // assign S_AXI_addr = {4'h1, mem_req_addr[21:0], 6'd0};
   assign S_AXI_wdata = mem_req_data_bits;
   // ssign S_AXI_wdata = write_count[0] ? mem_req_data_bits[127:64] : mem_req_data_bits[63:0];
   assign S_AXI_bready = 1'b1; //(state_r == st_WRITE_ACK);
