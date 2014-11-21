@@ -109,7 +109,7 @@ module rocketchip_wrapper
   wire [1:0]S_AXI_bresp;
   wire [63:0]S_AXI_rdata;
   wire S_AXI_rlast;
-  reg  S_AXI_rlast_r;
+  // reg  S_AXI_rlast_r;
   wire S_AXI_rready;
   wire S_AXI_rvalid;
   wire [63:0]S_AXI_wdata;
@@ -209,26 +209,29 @@ module rocketchip_wrapper
         .S_AXI_arburst(2'b01),  // type INCR
         .S_AXI_arcache(4'b0011),
         .S_AXI_arid(S_AXI_arid),
-        .S_AXI_arlen(8'd7), // burst length = 8 transfers
+        // .S_AXI_arlen(8'd7), // burst length = 8 transfers
+        .S_AXI_arlen(8'd1), // burst length = 1 transfers
         .S_AXI_arlock(1'b0),
         .S_AXI_arprot(3'b000),
         .S_AXI_arqos(4'b0000),
         .S_AXI_arready(S_AXI_arready),
         .S_AXI_arregion(4'b0000),
-        .S_AXI_arsize(3'b011), // burst size = 64 bits/beat
+        // .S_AXI_arsize(3'b011), // burst size = 64 bits/beat
+        .S_AXI_arsize(3'b10), // burst size = 32 bits/beat
         .S_AXI_arvalid(S_AXI_arvalid),
         //
         .S_AXI_awaddr(S_AXI_addr),
         .S_AXI_awburst(2'b01),
         .S_AXI_awcache(4'b0011),
         .S_AXI_awid(S_AXI_awid),
-        .S_AXI_awlen(8'd7), // burst length = 8 transfers
+        // .S_AXI_awlen(8'd7), // burst length = 8 transfers
+        .S_AXI_awlen(8'd1), // burst length = 1 transfers
         .S_AXI_awlock(1'b0),
         .S_AXI_awprot(3'b000),
         .S_AXI_awqos(4'b0000),
         .S_AXI_awready(S_AXI_awready),
         .S_AXI_awregion(4'b0000),
-        .S_AXI_awsize(3'b011),
+        .S_AXI_awsize(3'b10 /*3'b011*/),
         .S_AXI_awvalid(S_AXI_awvalid),
         //
         .S_AXI_bid(S_AXI_bid),
@@ -405,6 +408,7 @@ module rocketchip_wrapper
 //  parameter st_WRITE_ACK = 3'b100;
 
   reg [1:0] state_r = st_IDLE; // for poweron global set/reset
+  reg write_count = 1'b0;
   // reg [2:0] write_count = 3'd0;
   // reg read_count = 1'b0;
 
@@ -413,13 +417,13 @@ module rocketchip_wrapper
      if (reset)
      begin
         state_r <= st_IDLE;
-        // write_count <= 3'd0;
+        write_count <= 3'd0;
         // read_count <= 1'b0;
         // mem_resp_data_buf <= 64'd0;
-        S_AXI_rlast_r <= 1'b0;
+        // S_AXI_rlast_r <= 1'b0;
      end
      else
-        S_AXI_rlast_r <= S_AXI_rlast && S_AXI_rvalid;
+        // S_AXI_rlast_r <= S_AXI_rlast && S_AXI_rvalid;
         /*
         if (S_AXI_rvalid)
         begin
@@ -445,8 +449,8 @@ module rocketchip_wrapper
            st_WRITE : begin
               if (S_AXI_wready && mem_req_data_val)
               begin
-                 // write_count <= write_count + 1;
-                 // if (write_count == 3'd7)
+                 write_count <= write_count + 1;
+                 if (write_count /* == 3'd7 */)
 //                    state_r <= st_WRITE_ACK;
                     state_r <= st_IDLE;
               end
@@ -454,7 +458,7 @@ module rocketchip_wrapper
 //           st_WRITE_ACK : begin
 //              if (S_AXI_bvalid)
 //                 state_r <= st_IDLE;
-//           end
+           end
 //           default : begin  // Fault Recovery
 //              <state> <= <state1>;
 //           end   
@@ -465,18 +469,18 @@ module rocketchip_wrapper
   assign S_AXI_arvalid = (state_r == st_READ);
   assign mem_req_cmd_rdy = ((state_r == st_START_WRITE) && S_AXI_awready) || ((state_r == st_READ) && S_AXI_arready);
   assign S_AXI_wvalid = (state_r == st_WRITE) && mem_req_data_val;
-  assign S_AXI_wlast = (state_r == st_WRITE); // && (write_count == 3'd7);
+  assign S_AXI_wlast = (state_r == st_WRITE) && write_count; // && (write_count == 3'd7);
 
   assign S_AXI_rready = 1'b1;
   // assign mem_resp_val = read_count; // FIXME: assuming mem_resp_rdy is always 1 (i think its OK)
   assign mem_resp_val = S_AXI_rvalid; 
 
-  assign mem_req_data_rdy = (state_r == st_WRITE) /* && write_count[0] */ && S_AXI_wready;
-  assign S_AXI_addr = mem_req_addr;
-  // assign S_AXI_addr = {4'h1, mem_req_addr[21:0], 6'd0};
-  assign S_AXI_wdata = mem_req_data_bits;
-  // ssign S_AXI_wdata = write_count[0] ? mem_req_data_bits[127:64] : mem_req_data_bits[63:0];
-  assign S_AXI_bready = 1'b1; //(state_r == st_WRITE_ACK);
+  // assign mem_req_data_rdy = (state_r == st_WRITE) && write_count[0] && S_AXI_wready;
+  assign mem_req_data_rdy = (state_r == st_WRITE) && write_count && S_AXI_wready;
+  assign S_AXI_addr = {4'h1, mem_req_addr[21:0], 6'd0};
+  // assign S_AXI_wdata = write_count[0] ? mem_req_data_bits[127:64] : mem_req_data_bits[63:0];
+  assign S_AXI_wdata = {32'd0, mem_req_data_bits};
+  assign S_AXI_bready = 1'b1; // (state_r == st_WRITE_ACK);
   
 /*
   fifo_8x5 tag_queue (
@@ -518,7 +522,7 @@ module rocketchip_wrapper
        .io_mem_resp_ready( mem_resp_rdy ),
        .io_mem_resp_valid( mem_resp_val ),
        // .io_mem_resp_bits_data( {S_AXI_rdata, mem_resp_data_buf} ),
-       .io_mem_resp_bits_data( S_AXI_rdata ),
+       .io_mem_resp_bits_data( S_AXI_rdata[31:0] ),
        .io_mem_resp_bits_tag( mem_resp_tag )
   );
 `ifndef differential_clock
