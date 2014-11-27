@@ -458,7 +458,7 @@ module rocketchip_wrapper
 //           st_WRITE_ACK : begin
 //              if (S_AXI_bvalid)
 //                 state_r <= st_IDLE;
-           end
+//           end
 //           default : begin  // Fault Recovery
 //              <state> <= <state1>;
 //           end   
