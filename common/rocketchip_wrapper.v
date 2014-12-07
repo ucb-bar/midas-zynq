@@ -471,7 +471,8 @@ module rocketchip_wrapper
   assign S_AXI_wvalid = (state_r == st_WRITE) && mem_req_data_val;
   assign S_AXI_wlast = (state_r == st_WRITE) && write_count; // && (write_count == 3'd7);
 
-  assign S_AXI_rready = 1'b1;
+  // assign S_AXI_rready = 1'b1;
+  assign S_AXI_rready = mem_resp_rdy;
   // assign mem_resp_val = read_count; // FIXME: assuming mem_resp_rdy is always 1 (i think its OK)
   assign mem_resp_val = S_AXI_rvalid; 
 
