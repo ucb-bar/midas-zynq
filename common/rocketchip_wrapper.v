@@ -500,9 +500,9 @@ module rocketchip_wrapper
   assign S_AXI_awid = 6'd0;
   assign mem_resp_tag = S_AXI_rid[4:0];
 
-  DaisyShim top(
+  Strober top(
        .clk(host_clk),
-       .reset(reset_cpu),
+       .reset_top(reset_cpu),
        //.io_host_clk(  )
        //.io_host_clk_edge(  )
        .io_host_in_ready( host_in_ready ),
