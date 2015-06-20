@@ -87,17 +87,7 @@ module rocketchip_wrapper
   wire M_AXI_wvalid;
   wire [11:0] M_AXI_arid, M_AXI_awid; // outputs from ARM core
   wire [11:0] M_AXI_bid, M_AXI_rid;   // inputs to ARM core
-
-  wire [4:0] raddr, waddr;
-  reg  [4:0] raddr_r, waddr_r;
-  reg [11:0] arid_r, awid_r;
-  // reg [15:0] host_out_bits_r;
-
-  wire host_in_fifo_full, host_in_fifo_empty, host_in_fifo_rden, host_in_fifo_wren;
-  wire host_out_fifo_full, host_out_fifo_empty, host_out_fifo_wren, host_out_fifo_rden;
-  wire [31:0] host_in_fifo_dout, host_out_fifo_dout;
-  wire [5:0] host_out_fifo_count;
-  // reg host_out_count, host_in_count;
+  wire [1:0] M_AXI_bresp, M_AXI_rresp;
 
   wire [31:0]S_AXI_addr;
   wire S_AXI_arready;
@@ -109,7 +99,6 @@ module rocketchip_wrapper
   wire [1:0]S_AXI_bresp;
   wire [63:0]S_AXI_rdata;
   wire S_AXI_rlast;
-  // reg  S_AXI_rlast_r;
   wire S_AXI_rready;
   wire S_AXI_rvalid;
   wire [63:0]S_AXI_wdata;
@@ -119,20 +108,8 @@ module rocketchip_wrapper
   wire [5:0] S_AXI_arid, S_AXI_awid; // inputs to ARM core
   wire [5:0] S_AXI_bid, S_AXI_rid;   // outputs from ARM core
 
-  wire mem_req_cmd_val, mem_req_cmd_rdy, mem_req_cmd_rw, mem_req_data_val, mem_req_data_rdy;
-  wire mem_resp_val,mem_resp_rdy;
-  wire [4:0] mem_req_tag, mem_resp_tag;
-  wire [31:0] mem_req_addr;
-  // wire [25:0] mem_req_addr;
-  wire [63:0] mem_req_data_bits;
-  // wire [127:0] mem_req_data_bits;
-  // reg [63:0] mem_resp_data_buf;
-
   wire reset, reset_cpu;
 
-  wire host_in_valid, host_in_ready, host_out_ready, host_out_valid;
-  // wire [15:0] host_in_bits, host_out_bits;
-  wire [31:0] host_in_bits, host_out_bits;
   wire host_clk;
   wire gclk_i, gclk_fbout, host_clk_i, mmcm_locked;
 
@@ -188,14 +165,14 @@ module rocketchip_wrapper
         //
         .M_AXI_bid(M_AXI_bid),
         .M_AXI_bready(M_AXI_bready),
-        .M_AXI_bresp(2'b00),
+        .M_AXI_bresp(M_AXI_bresp),
         .M_AXI_bvalid(M_AXI_bvalid),
         //
         .M_AXI_rdata(M_AXI_rdata),
         .M_AXI_rid(M_AXI_rid),
         .M_AXI_rlast(M_AXI_rlast),
         .M_AXI_rready(M_AXI_rready),
-        .M_AXI_rresp(),
+        .M_AXI_rresp(M_AXI_rresp),
         .M_AXI_rvalid(M_AXI_rvalid),
         //
         .M_AXI_wdata(M_AXI_wdata),
@@ -254,278 +231,58 @@ module rocketchip_wrapper
         .ext_clk_in(host_clk)
         );
 
-`define DCOUNT_ADDR 5'h00
-`define RFIFO_ADDR  5'h01
-
-`define WFIFO_ADDR 5'h00
-`define RESET_ADDR 5'h1f
-
-  // HTIF interface between ARM and reference chip on FPGA via memory mapped registers
-  // 2 read addresses : 1 for FIFO data count (0x0), 1 for FIFO data (0x1)
-  // 2 write addresses: 1 for FIFO data (0x0), 1 for reset (0x31)
-  
-  // host_in (from ARM to fpga)
-
-  assign waddr = M_AXI_awaddr[6:2];
-  assign raddr = M_AXI_araddr[6:2];
-
-  fifo_32x32 host_in_fifo (
-    .clk(host_clk),
-    .reset(reset),
-    .din(M_AXI_wdata),
-    .wren(host_in_fifo_wren),
-    .rden(host_in_fifo_rden),
-    .dout(host_in_fifo_dout),
-    .full(host_in_fifo_full),
-    .empty(host_in_fifo_empty),
-    .count()
-  );
-
-  assign host_in_valid = !host_in_fifo_empty;
-  assign host_in_fifo_rden = host_in_valid && host_in_ready;
-  // assign host_in_fifo_rden = host_in_count && host_in_valid && host_in_ready;
-  assign host_in_bits = host_in_fifo_dout;
-  // assign host_in_bits = !host_in_count ? host_in_fifo_dout[15:0] : host_in_fifo_dout[31:16];
-
-  // host_out (from FPGA to ARM)
-  
-  assign host_out_ready = !host_out_fifo_full;
-  // assign host_out_fifo_wren = (host_out_count == 1'b1);
-  assign host_out_fifo_wren = host_out_valid; // TODO: is it ok?
-  assign host_out_fifo_rden = M_AXI_rvalid && M_AXI_rready && (raddr_r == `RFIFO_ADDR);
-
-  fifo_32x32 host_out_fifo (
-    .clk(host_clk),
-    .reset(reset),
-    // .din({host_out_bits, host_out_bits_r}),
-    .din(host_out_bits),
-    .wren(host_out_fifo_wren),
-    .rden(host_out_fifo_rden),
-    .dout(host_out_fifo_dout),
-    .full(host_out_fifo_full),
-    .empty(host_out_fifo_empty),
-    .count(host_out_fifo_count)
-  );
-
   assign reset = !FCLK_RESET0_N || !mmcm_locked;
 
-  parameter st_rd_idle = 1'b0;
-  parameter st_rd_read = 1'b1;
+  assign S_AXI_addr = 32'b0;
+  assign S_AXI_arid = 6'b0;
+  assign S_AXI_awid = 6'b0;
+  assign S_AXI_arvalid = 1'b0;
+  assign S_AXI_awvalid = 1'b0;
+  assign S_AXI_wvalid = 1'b0;
+  assign S_AXI_wlast = 1'b0;
+  assign S_AXI_wdata = 64'b0;
+  assign S_AXI_rready = 1'b1;
+  assign S_AXI_bready = 1'b1;
 
-  reg st_rd = st_rd_idle;
-
-  parameter st_wr_idle  = 2'd0;
-  parameter st_wr_write = 2'd1;
-  parameter st_wr_ack   = 2'd2;
-
-  reg [1:0] st_wr = st_wr_idle;
-
-  always @(posedge host_clk)
-  begin
-
-    if (reset)
-    begin
-      // host_out_bits_r <= 16'd0;
-      // host_out_count <= 1'd0;
-      // host_in_count <= 1'd0;
-      raddr_r <= 5'd0;
-      waddr_r <= 5'd0;
-      arid_r <= 12'd0;
-      awid_r <= 12'd0;
-      st_rd <= st_rd_idle;
-      st_wr <= st_wr_idle;
-    end
-    else
-    begin
-      /*
-      if (host_out_valid)
-      begin
-        host_out_bits_r <= host_out_bits;
-        host_out_count <= host_out_count + 1;
-      end
-      if (host_in_valid && host_in_ready)
-        host_in_count <= host_in_count + 1;
-      */
-// state machine to handle reads from AXI master (ARM)
-      case (st_rd)
-        st_rd_idle : begin
-          if (M_AXI_arvalid)
-          begin
-            st_rd <= st_rd_read;
-            raddr_r <= raddr;
-            arid_r <= M_AXI_arid;
-          end
-        end
-        st_rd_read : begin
-          if (M_AXI_rready)
-            st_rd <= st_rd_idle;
-        end
-      endcase
-
-// state machine to handle writes from AXI master
-      case (st_wr)
-        st_wr_idle : begin
-          if (M_AXI_awvalid && M_AXI_wvalid)
-          begin
-            st_wr <= st_wr_write;
-            waddr_r <= waddr;
-            awid_r <= M_AXI_awid;
-          end
-        end
-        st_wr_write : begin
-          if (!host_in_fifo_full || (waddr_r == `RESET_ADDR))
-            st_wr <= st_wr_ack;
-        end
-        st_wr_ack : begin
-          if (M_AXI_bready)
-            st_wr <= st_wr_idle;
-        end
-      endcase
-
-    end
-  end
-
-  assign M_AXI_arready = (st_rd == st_rd_idle);
-  assign M_AXI_rvalid  = (st_rd == st_rd_read);
-  assign M_AXI_rlast   = (st_rd == st_rd_read);
-  assign M_AXI_rdata   = (raddr_r == `DCOUNT_ADDR) ? {26'd0, host_out_fifo_count} : host_out_fifo_dout;
-  assign M_AXI_rid = arid_r;
-
-  wire do_write = (st_wr == st_wr_write);
-  assign M_AXI_awready = do_write;
-  assign M_AXI_wready  = do_write;
-  assign host_in_fifo_wren = do_write && (waddr_r == `WFIFO_ADDR);
-  assign reset_cpu = do_write && (waddr_r == `RESET_ADDR);
-
-  assign M_AXI_bvalid = (st_wr == st_wr_ack);
-  assign M_AXI_bid = awid_r;
-
-  // interface between test chip mem interface and zynq DDR via HP0 AXI port
-  parameter st_IDLE = 2'b00;
-  parameter st_READ = 2'b01;
-  parameter st_START_WRITE = 2'b10;
-  parameter st_WRITE = 2'b11;
-//  parameter st_WRITE_ACK = 3'b100;
-
-  reg [1:0] state_r = st_IDLE; // for poweron global set/reset
-  reg write_count = 1'b0;
-  // reg [2:0] write_count = 3'd0;
-  // reg read_count = 1'b0;
-
-  always @(posedge host_clk)
-  begin
-     if (reset)
-     begin
-        state_r <= st_IDLE;
-        write_count <= 3'd0;
-        // read_count <= 1'b0;
-        // mem_resp_data_buf <= 64'd0;
-        // S_AXI_rlast_r <= 1'b0;
-     end
-     else
-        // S_AXI_rlast_r <= S_AXI_rlast && S_AXI_rvalid;
-        /*
-        if (S_AXI_rvalid)
-        begin
-           read_count <= read_count + 1;
-           mem_resp_data_buf <= S_AXI_rdata;
-        end
-        */
-        case (state_r)
-           st_IDLE : begin
-              if (mem_req_cmd_val && !mem_req_cmd_rw)
-                state_r <= st_READ;
-              else if (mem_req_cmd_val && mem_req_cmd_rw && mem_req_data_val)
-                state_r <= st_START_WRITE;
-           end
-           st_READ : begin
-              if (S_AXI_arready)
-                 state_r <= st_IDLE;
-           end
-           st_START_WRITE : begin
-              if (S_AXI_awready)
-                 state_r <= st_WRITE;
-           end
-           st_WRITE : begin
-              if (S_AXI_wready && mem_req_data_val)
-              begin
-                 write_count <= write_count + 1;
-                 if (write_count /* == 3'd7 */)
-//                    state_r <= st_WRITE_ACK;
-                    state_r <= st_IDLE;
-              end
-           end
-//           st_WRITE_ACK : begin
-//              if (S_AXI_bvalid)
-//                 state_r <= st_IDLE;
-//           end
-//           default : begin  // Fault Recovery
-//              <state> <= <state1>;
-//           end   
-        endcase
-  end
-  
-  assign S_AXI_awvalid = (state_r == st_START_WRITE);
-  assign S_AXI_arvalid = (state_r == st_READ);
-  assign mem_req_cmd_rdy = ((state_r == st_START_WRITE) && S_AXI_awready) || ((state_r == st_READ) && S_AXI_arready);
-  assign S_AXI_wvalid = (state_r == st_WRITE) && mem_req_data_val;
-  assign S_AXI_wlast = (state_r == st_WRITE) && write_count; // && (write_count == 3'd7);
-
-  // assign S_AXI_rready = 1'b1;
-  assign S_AXI_rready = mem_resp_rdy;
-  // assign mem_resp_val = read_count; // FIXME: assuming mem_resp_rdy is always 1 (i think its OK)
-  assign mem_resp_val = S_AXI_rvalid; 
-
-  // assign mem_req_data_rdy = (state_r == st_WRITE) && write_count[0] && S_AXI_wready;
-  assign mem_req_data_rdy = (state_r == st_WRITE) && write_count && S_AXI_wready;
-  assign S_AXI_addr = {4'h1, mem_req_addr[21:0], 6'd0};
-  // assign S_AXI_wdata = write_count[0] ? mem_req_data_bits[127:64] : mem_req_data_bits[63:0];
-  assign S_AXI_wdata = {32'd0, mem_req_data_bits};
-  assign S_AXI_bready = 1'b1; // (state_r == st_WRITE_ACK);
-  
-/*
-  fifo_8x5 tag_queue (
-    .clk(host_clk),
-    .reset(reset),
-    .din(mem_req_tag),
-    .wren(S_AXI_arvalid & S_AXI_arready),
-    .rden(S_AXI_rlast_r),
-    .dout(mem_resp_tag),
-    .full(),
-    .empty()
-  );
-*/
-
-  assign S_AXI_arid = {1'b0, mem_req_tag};
-  assign S_AXI_awid = 6'd0;
-  assign mem_resp_tag = S_AXI_rid[4:0];
-
-  Strober top(
+  SimAXI4Wrapper top(
        .clk(host_clk),
-       .reset_top(reset_cpu),
-       //.io_host_clk(  )
-       //.io_host_clk_edge(  )
-       .io_host_in_ready( host_in_ready ),
-       .io_host_in_valid( host_in_valid ),
-       .io_host_in_bits( host_in_bits ),
-       .io_host_out_ready( host_out_ready ),
-       .io_host_out_valid( host_out_valid ),
-       .io_host_out_bits( host_out_bits ),
-       //.io_host_debug_stats_pcr(  )
-       .io_mem_req_cmd_ready( mem_req_cmd_rdy ),
-       .io_mem_req_cmd_valid( mem_req_cmd_val ),
-       .io_mem_req_cmd_bits_addr( mem_req_addr ),
-       .io_mem_req_cmd_bits_tag( mem_req_tag ),
-       .io_mem_req_cmd_bits_rw( mem_req_cmd_rw ),
-       .io_mem_req_data_ready( mem_req_data_rdy ),
-       .io_mem_req_data_valid( mem_req_data_val ),
-       .io_mem_req_data_bits_data( mem_req_data_bits ),
-       .io_mem_resp_ready( mem_resp_rdy ),
-       .io_mem_resp_valid( mem_resp_val ),
-       // .io_mem_resp_bits_data( {S_AXI_rdata, mem_resp_data_buf} ),
-       .io_mem_resp_bits_data( S_AXI_rdata[31:0] ),
-       .io_mem_resp_bits_tag( mem_resp_tag )
-  );
+       .reset(reset),
+
+       .io_M_AXI_ar_bits_addr(M_AXI_araddr),
+       .io_M_AXI_ar_bits_burst(M_AXI_arburst),
+       .io_M_AXI_ar_bits_id(M_AXI_arid),
+       .io_M_AXI_ar_bits_len(M_AXI_arlen),
+       .io_M_AXI_ar_bits_size(M_AXI_arsize),
+       .io_M_AXI_ar_ready(M_AXI_arready),
+       .io_M_AXI_ar_valid(M_AXI_arvalid),
+
+       .io_M_AXI_aw_bits_addr(M_AXI_awaddr),
+       .io_M_AXI_aw_bits_burst(M_AXI_awburst),
+       .io_M_AXI_aw_bits_id(M_AXI_awid),
+       .io_M_AXI_aw_bits_len(M_AXI_awlen),
+       .io_M_AXI_aw_bits_size(M_AXI_awsize),
+       .io_M_AXI_aw_ready(M_AXI_awready),
+       .io_M_AXI_aw_valid(M_AXI_awvalid),
+
+       .io_M_AXI_b_bits_id(M_AXI_bid),
+       .io_M_AXI_b_bits_resp(M_AXI_bresp),
+       .io_M_AXI_b_ready(M_AXI_bready),
+       .io_M_AXI_b_valid(M_AXI_bvalid),
+
+       .io_M_AXI_r_bits_data(M_AXI_rdata),
+       .io_M_AXI_r_bits_id(M_AXI_rid),
+       .io_M_AXI_r_bits_last(M_AXI_rlast),
+       .io_M_AXI_r_bits_resp(M_AXI_rresp),
+       .io_M_AXI_r_ready(M_AXI_rready),
+       .io_M_AXI_r_valid(M_AXI_rvalid),
+
+       .io_M_AXI_w_bits_data(M_AXI_wdata),
+       .io_M_AXI_w_bits_last(M_AXI_wlast),
+       .io_M_AXI_w_bits_strb(M_AXI_wstrb),
+       .io_M_AXI_w_ready(M_AXI_wready),
+       .io_M_AXI_w_valid(M_AXI_wvalid)//,
+       );
+
 `ifndef differential_clock
   IBUFG ibufg_gclk (.I(clk), .O(gclk_i));
 `else
@@ -583,118 +340,4 @@ module rocketchip_wrapper
     .RST(1'b0),
     .CLKFBIN(gclk_fbout));
 
-endmodule
-
-
-// fifo queues originally from fifos.v
-
-/*
-module fifo_8x5 (
-    input clk,
-    input reset,
-    input wren,
-    input rden,
-    input [4:0] din,
-    output reg empty,
-    output reg full,
-    output [4:0] dout
-    );
-
-  reg [4:0] data [0:7];
-  reg [2:0] raddr, waddr;
-  wire [2:0] waddr_next, raddr_next;
-  wire write = wren && (rden || !full);
-  wire read = rden && !empty;
-
-  assign waddr_next = write ? waddr + 1'b1 : waddr;
-  assign raddr_next = read ? raddr + 1'b1 : raddr;
-  assign dout = data[raddr];
-
-  always @(posedge clk)
-  begin
-    if (reset)
-    begin
-      empty <= 1'b1;
-      full <= 1'b0;
-      raddr <= 3'd0;
-      waddr <= 3'd0;
-    end
-    else
-    begin
-      waddr <= waddr_next;
-      raddr <= raddr_next;
-      if (write)
-        data[waddr] <= din;
-
-      if (read && raddr_next == waddr_next && !full)
-        empty <= 1'b1;
-      else if (write && !read)
-        empty <= 1'b0;
-
-      if (write && raddr_next == waddr_next)
-        full <= 1'b1;
-      else if (read && !write)
-        full <= 1'b0;
-
-    end
-  end
-endmodule
-*/
-
-module fifo_32x32 (
-    input clk,
-    input reset,
-    input wren,
-    input rden,
-    input [31:0] din,
-    output reg empty,
-    output reg full,
-    output [31:0] dout,
-    output [5:0] count
-    );
-
-  reg [31:0] data [0:31];
-  reg [4:0] raddr, waddr;
-  wire [4:0] waddr_next, raddr_next;
-  reg [5:0] cnt;
-  wire write = wren && (rden || !full);
-  wire read = rden && !empty;
-
-  assign waddr_next = write ? waddr + 1'b1 : waddr;
-  assign raddr_next = read ? raddr + 1'b1 : raddr;
-  assign dout = data[raddr];
-  assign count = cnt;
-
-  always @(posedge clk)
-  begin
-    if (reset)
-    begin
-      empty <= 1'b1;
-      full <= 1'b0;
-      raddr <= 5'd0;
-      waddr <= 5'd0;
-      cnt <= 6'd0;
-    end
-    else
-    begin
-      waddr <= waddr_next;
-      raddr <= raddr_next;
-      if (write)
-        data[waddr] <= din;
-
-      if (read && raddr_next == waddr_next && !full)
-        empty <= 1'b1;
-      else if (write && !read)
-        empty <= 1'b0;
-
-      if (write && raddr_next == waddr_next)
-        full <= 1'b1;
-      else if (read && !write)
-        full <= 1'b0;
-
-      if (write ^ read)
-        cnt <= write ? cnt + 1 : cnt - 1;
-
-    end
-  end
 endmodule
