@@ -35,7 +35,7 @@ src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
 
 src/verilog/$(DESIGN)AXI4Wrapper.v:
 	cd $(base_dir)/rocketchip; \
-	make $(DESIGN)AXI4Wrapper.v; \
+	make $(DESIGN)AXI4Wrapper.prm; \
 	cp generated/$(DESIGN)AXI4Wrapper.v $(base_dir)/$(BOARD)/src/verilog
 rocketchip: src/verilog/$(DESIGN)AXI4Wrapper.v	
 
