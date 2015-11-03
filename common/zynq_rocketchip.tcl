@@ -42,7 +42,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/src/verilog/clocking.vh"]"\
- "[file normalize "$origin_dir/src/verilog/DESIGN_HEREAXI4Wrapper.v"]"\
+ "[file normalize "$origin_dir/src/verilog/DESIGN_HERENASTIShim.v"]"\
  "[file normalize "$origin_dir/src/verilog/rocketchip_wrapper.v"]"\
 ]
 add_files -norecurse -fileset $obj $files
