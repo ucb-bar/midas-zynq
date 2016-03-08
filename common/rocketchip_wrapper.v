@@ -113,7 +113,6 @@ module rocketchip_wrapper
   wire [5:0] S_AXI_arid, S_AXI_awid; // inputs to ARM core
   wire [5:0] S_AXI_bid, S_AXI_rid;   // outputs from ARM core
   wire [1:0] S_AXI_bresp, S_AXI_rresp;
-  wire [31:0]S_AXI_addr;
 
   wire reset, reset_cpu;
 
@@ -237,71 +236,77 @@ module rocketchip_wrapper
 
   assign reset = !FCLK_RESET0_N || !mmcm_locked;
 
-  NASTIShim top(
+  wire [31:0] slave_araddr;
+  wire [31:0] slave_awaddr;
+
+  assign S_AXI_araddr = {4'd1, slave_araddr[27:0]};
+  assign S_AXI_awaddr = {4'd1, slave_awaddr[27:0]};
+
+  NastiShim top(
        .clk(host_clk),
        .reset(reset),
 
-       .io_mnasti_ar_bits_addr(M_AXI_araddr),
-       .io_mnasti_ar_bits_id(M_AXI_arid),
-       .io_mnasti_ar_bits_len(M_AXI_arlen),
-       .io_mnasti_ar_bits_size(M_AXI_arsize),
-       .io_mnasti_ar_ready(M_AXI_arready),
-       .io_mnasti_ar_valid(M_AXI_arvalid),
+       .io_master_ar_bits_addr(M_AXI_araddr),
+       .io_master_ar_bits_id(M_AXI_arid),
+       .io_master_ar_bits_len(M_AXI_arlen),
+       .io_master_ar_bits_size(M_AXI_arsize),
+       .io_master_ar_ready(M_AXI_arready),
+       .io_master_ar_valid(M_AXI_arvalid),
 
-       .io_mnasti_aw_bits_addr(M_AXI_awaddr),
-       .io_mnasti_aw_bits_id(M_AXI_awid),
-       .io_mnasti_aw_bits_len(M_AXI_awlen),
-       .io_mnasti_aw_bits_size(M_AXI_awsize),
-       .io_mnasti_aw_ready(M_AXI_awready),
-       .io_mnasti_aw_valid(M_AXI_awvalid),
+       .io_master_aw_bits_addr(M_AXI_awaddr),
+       .io_master_aw_bits_id(M_AXI_awid),
+       .io_master_aw_bits_len(M_AXI_awlen),
+       .io_master_aw_bits_size(M_AXI_awsize),
+       .io_master_aw_ready(M_AXI_awready),
+       .io_master_aw_valid(M_AXI_awvalid),
 
-       .io_mnasti_b_bits_id(M_AXI_bid),
-       .io_mnasti_b_bits_resp(M_AXI_bresp),
-       .io_mnasti_b_ready(M_AXI_bready),
-       .io_mnasti_b_valid(M_AXI_bvalid),
+       .io_master_b_bits_id(M_AXI_bid),
+       .io_master_b_bits_resp(M_AXI_bresp),
+       .io_master_b_ready(M_AXI_bready),
+       .io_master_b_valid(M_AXI_bvalid),
 
-       .io_mnasti_r_bits_data(M_AXI_rdata),
-       .io_mnasti_r_bits_id(M_AXI_rid),
-       .io_mnasti_r_bits_last(M_AXI_rlast),
-       .io_mnasti_r_bits_resp(M_AXI_rresp),
-       .io_mnasti_r_ready(M_AXI_rready),
-       .io_mnasti_r_valid(M_AXI_rvalid),
+       .io_master_r_bits_data(M_AXI_rdata),
+       .io_master_r_bits_id(M_AXI_rid),
+       .io_master_r_bits_last(M_AXI_rlast),
+       .io_master_r_bits_resp(M_AXI_rresp),
+       .io_master_r_ready(M_AXI_rready),
+       .io_master_r_valid(M_AXI_rvalid),
 
-       .io_mnasti_w_bits_data(M_AXI_wdata),
-       .io_mnasti_w_bits_last(M_AXI_wlast),
-       .io_mnasti_w_ready(M_AXI_wready),
-       .io_mnasti_w_valid(M_AXI_wvalid),
+       .io_master_w_bits_data(M_AXI_wdata),
+       .io_master_w_bits_last(M_AXI_wlast),
+       .io_master_w_ready(M_AXI_wready),
+       .io_master_w_valid(M_AXI_wvalid),
 
-       .io_snasti_ar_bits_addr(S_AXI_araddr),
-       .io_snasti_ar_bits_id(S_AXI_arid),
-       .io_snasti_ar_bits_len(S_AXI_arlen),
-       .io_snasti_ar_bits_size(S_AXI_arsize),
-       .io_snasti_ar_ready(S_AXI_arready),
-       .io_snasti_ar_valid(S_AXI_arvalid),
+       .io_slave_ar_bits_addr(slave_araddr),
+       .io_slave_ar_bits_id(S_AXI_arid),
+       .io_slave_ar_bits_len(S_AXI_arlen),
+       .io_slave_ar_bits_size(S_AXI_arsize),
+       .io_slave_ar_ready(S_AXI_arready),
+       .io_slave_ar_valid(S_AXI_arvalid),
 
-       .io_snasti_aw_bits_addr(S_AXI_awaddr),
-       .io_snasti_aw_bits_id(S_AXI_awid),
-       .io_snasti_aw_bits_len(S_AXI_awlen),
-       .io_snasti_aw_bits_size(S_AXI_awsize),
-       .io_snasti_aw_ready(S_AXI_awready),
-       .io_snasti_aw_valid(S_AXI_awvalid),
+       .io_slave_aw_bits_addr(slave_awaddr),
+       .io_slave_aw_bits_id(S_AXI_awid),
+       .io_slave_aw_bits_len(S_AXI_awlen),
+       .io_slave_aw_bits_size(S_AXI_awsize),
+       .io_slave_aw_ready(S_AXI_awready),
+       .io_slave_aw_valid(S_AXI_awvalid),
 
-       .io_snasti_b_bits_id(S_AXI_bid),
-       .io_snasti_b_bits_resp(S_AXI_bresp),
-       .io_snasti_b_ready(S_AXI_bready),
-       .io_snasti_b_valid(S_AXI_bvalid),
+       .io_slave_b_bits_id(S_AXI_bid),
+       .io_slave_b_bits_resp(S_AXI_bresp),
+       .io_slave_b_ready(S_AXI_bready),
+       .io_slave_b_valid(S_AXI_bvalid),
 
-       .io_snasti_r_bits_data(S_AXI_rdata),
-       .io_snasti_r_bits_id(S_AXI_rid),
-       .io_snasti_r_bits_last(S_AXI_rlast),
-       .io_snasti_r_bits_resp(S_AXI_rresp),
-       .io_snasti_r_ready(S_AXI_rready),
-       .io_snasti_r_valid(S_AXI_rvalid),
+       .io_slave_r_bits_data(S_AXI_rdata),
+       .io_slave_r_bits_id(S_AXI_rid),
+       .io_slave_r_bits_last(S_AXI_rlast),
+       .io_slave_r_bits_resp(S_AXI_rresp),
+       .io_slave_r_ready(S_AXI_rready),
+       .io_slave_r_valid(S_AXI_rvalid),
 
-       .io_snasti_w_bits_data(S_AXI_wdata),
-       .io_snasti_w_bits_last(S_AXI_wlast),
-       .io_snasti_w_ready(S_AXI_wready),
-       .io_snasti_w_valid(S_AXI_wvalid)
+       .io_slave_w_bits_data(S_AXI_wdata),
+       .io_slave_w_bits_last(S_AXI_wlast),
+       .io_slave_w_ready(S_AXI_wready),
+       .io_slave_w_valid(S_AXI_wvalid)
        );
 
 `ifndef differential_clock
