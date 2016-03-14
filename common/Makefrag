@@ -4,17 +4,18 @@ JOBS = 16
 base_dir = $(abspath ..)
 common = $(base_dir)/common
 output_delivery = deliver_output
+SHELL := /bin/bash
 
 ifneq ($(BOARD_MODEL),)
 	insert_board = s/\# REPLACE FOR OFFICIAL BOARD NAME/set_property "board_part" "$(BOARD_MODEL)"/g
 endif
 
+proj_name = $(BOARD)_rocketchip_$(CONFIG)
 
 verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/rocketchip_wrapper.v \
-	src/verilog/$(DESIGN)NastiShim.v \
-
+	src/verilog/$(DESIGN)NastiShim.$(CONFIG).v \
 
 default: project
 
@@ -25,33 +26,33 @@ default: project
 src/verilog/rocketchip_wrapper.v: $(common)/rocketchip_wrapper.v
 	cp $(common)/rocketchip_wrapper.v src/verilog/
 
-src/tcl/$(BOARD)_rocketchip.tcl: $(common)/zynq_rocketchip.tcl Makefile
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/DESIGN_HERE/$(DESIGN)/g' \
-		$(common)/zynq_rocketchip.tcl > src/tcl/$(BOARD)_rocketchip.tcl
+src/tcl/$(proj_name).tcl: $(common)/zynq_rocketchip.tcl Makefile
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/PART_NUMBER_HERE/$(PART)/g;$(insert_board);s/DESIGN_HERE/$(DESIGN)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
+		$(common)/zynq_rocketchip.tcl > src/tcl/$(proj_name).tcl
 
-src/tcl/make_bitstream.tcl: $(common)/make_bitstream.tcl
-	sed 's/BOARD_NAME_HERE/$(BOARD)/g' \
-		$(common)/make_bitstream.tcl > src/tcl/make_bitstream.tcl
+src/tcl/make_bitstream_$(CONFIG).tcl: $(common)/make_bitstream.tcl
+	sed 's/BOARD_NAME_HERE/$(BOARD)/g;s/CHISEL_CONFIG_HERE/$(CONFIG)/g' \
+		$(common)/make_bitstream.tcl > src/tcl/make_bitstream_$(CONFIG).tcl
 
-src/verilog/$(DESIGN)NastiShim.v:
+src/verilog/$(DESIGN)NastiShim.$(CONFIG).v:
 	cd $(base_dir)/rocketchip; \
 	make $(DESIGN)-strober; \
-	cp generated-src/$(DESIGN)NastiShim.v $(base_dir)/$(BOARD)/src/verilog
-rocketchip: src/verilog/$(DESIGN)NastiShim.v	
+	cp generated-src/$(DESIGN)NastiShim.$(CONFIG).v $(base_dir)/$(BOARD)/src/verilog
+rocket: src/verilog/$(DESIGN)NastiShim.$(CONFIG).v
 
 # Project generation
 # ------------------------------------------------------------------------------
-project = $(BOARD)_rocketchip/$(BOARD)_rocketchip.xpr
-$(project): | src/verilog/rocketchip_wrapper.v src/verilog/$(DESIGN)NastiShim.v src/tcl/$(BOARD)_rocketchip.tcl
-	vivado -mode tcl -source src/tcl/$(BOARD)_rocketchip.tcl;
+project = $(proj_name)/$(proj_name).xpr
+$(project): | src/verilog/rocketchip_wrapper.v src/tcl/$(proj_name).tcl
+	vivado -mode tcl -source src/tcl/$(proj_name).tcl;
 project: $(project)
 
 vivado: $(project)
 	vivado $(project) &
 
-bitstream = $(BOARD)_rocketchip/$(BOARD)_rocketchip.runs/impl_1/rocketchip_wrapper.bit
-$(bitstream): src/tcl/make_bitstream.tcl $(verilog_srcs) src/constrs/base.xdc | $(project)
-	vivado -mode tcl -source src/tcl/make_bitstream.tcl
+bitstream = $(proj_name)/$(proj_name).runs/impl_1/rocketchip_wrapper.bit
+$(bitstream): src/tcl/make_bitstream_$(CONFIG).tcl $(verilog_srcs) src/constrs/base.xdc | $(project)
+	vivado -mode tcl -source src/tcl/make_bitstream_$(CONFIG).tcl
 bitstream: $(bitstream)
 
 
@@ -102,6 +103,7 @@ $(images):
 fetch-images: $(images)
 
 fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
+	ln -sf ../../$(bitstream) fpga-images-$(BOARD)/boot_image/rocketchip_wrapper.bit
 	cd fpga-images-$(BOARD); bootgen -image boot.bif -w -o boot.bin
 
 load-sd: $(images)
@@ -162,10 +164,10 @@ fetch-riscv-linux-deliver:
 
 clean:
 	rm -f *.log *.jou *.str
-	rm -rf $(BOARD)_rocketchip
-	rm -f src/verilog/*NastiShim.v
+	rm -rf $(BOARD)_rocketchip_*
+	rm -f src/verilog/*NastiShim.*.v
 	rm -f src/verilog/rocketchip_wrapper.v
-	rm -f src/tcl/$(BOARD)_rocketchip.tcl
+	rm -f src/tcl/$(BOARD)_rocketchip_*.tcl
 	rm -f src/tcl/make_bitstream.tcl
 
 .PHONY: vivado rocketchip fetch-images load-sd ramdisk-open ramdisk-close clean
