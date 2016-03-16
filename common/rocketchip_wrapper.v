@@ -89,30 +89,49 @@ module rocketchip_wrapper
   wire [11:0] M_AXI_bid, M_AXI_rid;   // inputs to ARM core
   wire [1:0] M_AXI_bresp, M_AXI_rresp;
 
-  wire [31:0]S_AXI_araddr;
-  wire [7:0]S_AXI_arlen;
   wire S_AXI_arready;
-  wire [2:0]S_AXI_arsize;
   wire S_AXI_arvalid;
-  wire [31:0]S_AXI_awaddr;
-  wire [7:0]S_AXI_awlen;
-  wire [3:0]S_AXI_wstrb;
+  wire [31:0] S_AXI_araddr;
+  wire [5:0]  S_AXI_arid;
+  wire [2:0]  S_AXI_arsize;
+  wire [7:0]  S_AXI_arlen;
+  wire [1:0]  S_AXI_arburst;
+  wire S_AXI_arlock;
+  wire [3:0]  S_AXI_arcache;
+  wire [2:0]  S_AXI_arprot;
+  wire [3:0]  S_AXI_arqos;
+  wire [3:0]  S_AXI_arregion;
+
   wire S_AXI_awready;
-  wire [2:0]S_AXI_awsize;
   wire S_AXI_awvalid;
-  wire S_AXI_bready;
-  wire S_AXI_bvalid;
-  wire [63:0]S_AXI_rdata;
-  wire S_AXI_rlast;
-  wire S_AXI_rready;
-  wire S_AXI_rvalid;
-  wire [63:0]S_AXI_wdata;
-  wire S_AXI_wlast;
+  wire [31:0] S_AXI_awaddr;
+  wire [5:0]  S_AXI_awid;
+  wire [2:0]  S_AXI_awsize;
+  wire [7:0]  S_AXI_awlen;
+  wire [1:0]  S_AXI_awburst;
+  wire S_AXI_awlock;
+  wire [3:0]  S_AXI_awcache;
+  wire [2:0]  S_AXI_awprot;
+  wire [3:0]  S_AXI_awqos;
+  wire [3:0]  S_AXI_awregion;
+
   wire S_AXI_wready;
   wire S_AXI_wvalid;
-  wire [5:0] S_AXI_arid, S_AXI_awid; // inputs to ARM core
-  wire [5:0] S_AXI_bid, S_AXI_rid;   // outputs from ARM core
-  wire [1:0] S_AXI_bresp, S_AXI_rresp;
+  wire [7:0]  S_AXI_wstrb;
+  wire [63:0] S_AXI_wdata;
+  wire S_AXI_wlast;
+
+  wire S_AXI_bready;
+  wire S_AXI_bvalid;
+  wire [1:0] S_AXI_bresp;
+  wire [5:0] S_AXI_bid;
+
+  wire S_AXI_rready;
+  wire S_AXI_rvalid;
+  wire [1:0]  S_AXI_rresp;
+  wire [5:0]  S_AXI_rid;
+  wire [63:0] S_AXI_rdata;
+  wire S_AXI_rlast;
 
   wire reset, reset_cpu;
 
