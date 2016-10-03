@@ -262,7 +262,7 @@ module rocketchip_wrapper
   assign S_AXI_awaddr = {4'd1, slave_awaddr[27:0]};
 
   ZynqShim top(
-       .clk(host_clk),
+       .clock(host_clk),
        .reset(reset),
 
        .io_master_ar_bits_addr(M_AXI_araddr),
@@ -292,6 +292,7 @@ module rocketchip_wrapper
        .io_master_r_valid(M_AXI_rvalid),
 
        .io_master_w_bits_data(M_AXI_wdata),
+       .io_master_w_bits_strb(M_AXI_wstrb),
        .io_master_w_bits_last(M_AXI_wlast),
        .io_master_w_ready(M_AXI_wready),
        .io_master_w_valid(M_AXI_wvalid),
