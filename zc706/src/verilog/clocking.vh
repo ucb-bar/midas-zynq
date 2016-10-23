@@ -8,7 +8,7 @@ Rocket Chip             1000              RC_CLK_MULT
   (in MHz)         ZYNQ_CLK_PERIOD       RC_CLK_DIVIDE
 
 
-This sets the parameters used by rocketchip_wrapper.v to
+This sets the parameters used by midas_wrapper.v to
 generate its own clock.
 
 Most uses should only change RC_CLK_MULT & RC_CLK_DIVIDE.

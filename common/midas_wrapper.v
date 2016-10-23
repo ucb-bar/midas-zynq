@@ -1,7 +1,7 @@
 `timescale 1 ps / 1 ps
 `include "clocking.vh"
 
-module rocketchip_wrapper
+module midas_wrapper
    (DDR_addr,
     DDR_ba,
     DDR_cas_n,
