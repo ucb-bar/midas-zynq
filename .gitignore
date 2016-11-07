@@ -2,7 +2,6 @@
 *.jou
 *.Xil
 
-zedboard/boot.bif
 zedboard/midas_zedboard_*
 zedboard/src/tcl/midas_zedboard_*.tcl
 zedboard/src/tcl/make_bitstream_*.tcl
@@ -11,7 +10,6 @@ zedboard/src/verilog/*/ZynqShim.v
 zedboard/deliver_output
 zedboard/soft_build
 
-zybo/boot.bif
 zybo/midas_zybo_*
 zybo/src/tcl/midas_zybo_*.tcl
 zybo/src/tcl/make_bitstream_*.tcl
@@ -20,7 +18,6 @@ zybo/src/verilog/*/ZynqShim.v
 zybo/deliver_output
 zybo/soft_build
 
-zc706/boot.bif
 zc706/midas_zc706_*
 zc706/src/tcl/midas_zc706_*.tcl
 zc706/src/tcl/make_bitstream_*.tcl

@@ -53,8 +53,6 @@ bitstream: $(bitstream)
 # Handle images and git submodule for prebuilt modules
 # ------------------------------------------------------------------------------
 images = boot.bif
-$(images): $(common)/boot.bif
-	cp $< $@
 
 fpga-images-$(BOARD)/boot.bin: $(images) $(bitstream)
 	ln -sf ../../$(bitstream) fpga-images-$(BOARD)/boot_image/midas_wrapper.bit
