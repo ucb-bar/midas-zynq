@@ -79,7 +79,7 @@ ramdisk-close:
 clean:
 	rm -f *.log *.jou *.str
 	rm -rf midas_$(BOARD)_*
-	rm -f src/verilog/ZynqShim.v
+	rm -rf src/verilog/$(DESIGN)
 	rm -f src/verilog/midas_wrapper.v
 	rm -f src/tcl/midas_$(BOARD)_*.tcl
 	rm -f src/tcl/make_bitstream.tcl
