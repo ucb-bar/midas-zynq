@@ -47,6 +47,7 @@ vivado: $(project)
 bitstream = $(proj_name)/$(proj_name).runs/impl_1/midas_wrapper.bit
 $(bitstream): src/tcl/make_bitstream_$(DESIGN).tcl $(verilog_srcs) src/constrs/base.xdc | $(project)
 	vivado -mode tcl -source src/tcl/make_bitstream_$(DESIGN).tcl
+
 bitstream: $(bitstream)
 
 
@@ -80,7 +81,6 @@ clean:
 	rm -f *.log *.jou *.str
 	rm -rf midas_$(BOARD)_*
 	rm -rf src/verilog/$(DESIGN)
-	rm -f src/verilog/midas_wrapper.v
 	rm -f src/tcl/midas_$(BOARD)_*.tcl
 	rm -f src/tcl/make_bitstream.tcl
 
