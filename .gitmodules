@@ -7,3 +7,6 @@
 [submodule "zc706/fpga-images-zc706"]
 	path = zc706/fpga-images-zc706
 	url = https://github.com/ucb-bar/fpga-images-zc706.git
+[submodule "zc706_MIG/fpga-images-zc706"]
+	path = zc706_MIG/fpga-images-zc706
+	url = git@github.com:ucb-bar/fpga-images-zc706.git
