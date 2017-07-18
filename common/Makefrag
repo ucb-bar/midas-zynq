@@ -85,3 +85,4 @@ clean:
 	rm -f src/tcl/make_bitstream.tcl
 
 .PHONY: vivado midas fetch-images load-sd ramdisk-open ramdisk-close clean
+.PRECIOUS: src/verilog/clocking.vh

@@ -5,3 +5,5 @@ PART = xc7z045ffg900-2
 DESIGN ?= Top
 
 include ../common/Makefrag
+
+.PRECIOUS: src/verilog/clocking.vh

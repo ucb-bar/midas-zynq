@@ -25,3 +25,10 @@ zc706/src/verilog/midas_wrapper.v
 zc706/src/verilog/*/ZynqShim.v
 zc706/deliver_output
 zc706/soft_build
+
+zc706_MIG/midas_zc706_MIG_*
+zc706_MIG/src/tcl/midas_zc706_MIG_*.tcl
+zc706_MIG/src/tcl/make_bitstream_*.tcl
+zc706_MIG/src/verilog/*/ZynqShim.v
+zc706_MIG/deliver_output
+zc706_MIG/soft_build
