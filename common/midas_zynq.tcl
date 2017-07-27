@@ -91,7 +91,7 @@ set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/src/verilog/clocking.vh"]"\
  "[file normalize "$origin_dir/src/verilog/midas_wrapper.v"]"\
- "[file normalize "$origin_dir/src/verilog/DESIGN_HERE/ZynqShim.v"]"\
+ "[file normalize "$origin_dir/src/verilog/DESIGN_HERE/FPGATop.v"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

@@ -15,7 +15,7 @@ proj_name = midas_$(BOARD)_$(DESIGN)
 verilog_srcs = \
 	src/verilog/clocking.vh \
 	src/verilog/midas_wrapper.v \
-	src/verilog/$(DESIGN)/ZynqShim.v \
+	src/verilog/$(DESIGN)/FPGATop.v \
 
 default: project
 

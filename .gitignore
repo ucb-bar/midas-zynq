@@ -6,7 +6,7 @@ zedboard/midas_zedboard_*
 zedboard/src/tcl/midas_zedboard_*.tcl
 zedboard/src/tcl/make_bitstream_*.tcl
 zedboard/src/verilog/midas_wrapper.v
-zedboard/src/verilog/*/ZynqShim.v
+zedboard/src/verilog/*/FPGATop.v
 zedboard/deliver_output
 zedboard/soft_build
 
@@ -14,7 +14,7 @@ zybo/midas_zybo_*
 zybo/src/tcl/midas_zybo_*.tcl
 zybo/src/tcl/make_bitstream_*.tcl
 zybo/src/verilog/midas_wrapper.v
-zybo/src/verilog/*/ZynqShim.v
+zybo/src/verilog/*/FPGATop.v
 zybo/deliver_output
 zybo/soft_build
 
@@ -22,13 +22,13 @@ zc706/midas_zc706_*
 zc706/src/tcl/midas_zc706_*.tcl
 zc706/src/tcl/make_bitstream_*.tcl
 zc706/src/verilog/midas_wrapper.v
-zc706/src/verilog/*/ZynqShim.v
+zc706/src/verilog/*/FPGATop.v
 zc706/deliver_output
 zc706/soft_build
 
 zc706_MIG/midas_zc706_MIG_*
 zc706_MIG/src/tcl/midas_zc706_MIG_*.tcl
 zc706_MIG/src/tcl/make_bitstream_*.tcl
-zc706_MIG/src/verilog/*/ZynqShim.v
+zc706_MIG/src/verilog/*/FPGATop.v
 zc706_MIG/deliver_output
 zc706_MIG/soft_build
