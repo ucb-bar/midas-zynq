@@ -1,3 +1,10 @@
+MIDAS Zynq Backend
+==================
+
+This repository contains the backend flows for the Zynq boards. It is not stand-alone. Instead, it is supposed to run inside MIDAS templates like [midas-examples](https://github.com/ucb-bar/midas-examples) or [midas-top](https://github.com/ucb-bar/midas-top-release). Thus, please refer to the example templates for its usage. 
+
+This repository is modified from [ucb-bar/fpga-zynq](https://github.com/ucb-bar/fpga-zynq). The following instructions are from [README](https://github.com/ucb-bar/fpga-zynq/blob/master/README.md) of fpga-zynq, which won't work for this repository.
+
 Rocket Chip on Zynq FPGAs
 =========================
 
